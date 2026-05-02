@@ -1,4 +1,4 @@
-# claude-pipeline
+# thinkframe
 
 Self-verifying orchestration layer for Claude Code. Drop-in skill set that transforms any vague prompt into a planned, executed, reviewed, and auto-fixed result.
 
@@ -33,8 +33,8 @@ STEP 7  Fix loop — plan fix → apply → re-verify (max 3 iterations, then es
 ## Install
 
 ```bash
-git clone https://github.com/Kartik-Agrawal-Tech/claude-pipeline.git
-cd claude-pipeline
+git clone https://github.com/nullcore-io/thinkframe.git
+cd thinkframe
 chmod +x setup.sh && ./setup.sh
 ```
 
@@ -92,4 +92,4 @@ It surfaces an `AskUserQuestion` before proceeding.
 
 ## License
 
-- [MIT](https://github.com/nullcore-io/claude-pipeline/blob/master/LICENSE)
+- [MIT](https://github.com/nullcore-io/thinkframe/blob/master/LICENSE)
