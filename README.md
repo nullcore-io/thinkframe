@@ -17,6 +17,12 @@ STEP 6  Verify (Reviewer + Auditor + Tester in parallel)
 STEP 7  Fix loop — plan fix → apply → re-verify (max 3 iterations, then escalate)
 ```
 
+## Prerequisites
+
+- [Claude Code](https://claude.ai/code) installed
+- Node.js ≥ 18 (for the hook script)
+- macOS or Linux (Windows: use Git Bash or WSL)
+
 ## Skills included
 
 | Skill | Purpose |
@@ -26,32 +32,18 @@ STEP 7  Fix loop — plan fix → apply → re-verify (max 3 iterations, then es
 
 ## Install
 
-1. Copy `skills/` into `~/.claude/skills/`
-2. Add to `~/.claude/CLAUDE.md`:
-
-```markdown
-## Royal Treatment
-Auto-triggered on every prompt via UserPromptSubmit hook.
-Invoke manually: Skill("royal-treatment")
-
-## Model Routing
-Invoke before any Agent() dispatch: Skill("model-route")
+```bash
+git clone https://github.com/Kartik-Agrawal-Tech/claude-pipeline.git
+cd claude-pipeline
+chmod +x setup.sh && ./setup.sh
 ```
 
-3. Wire the UserPromptSubmit hook in `~/.claude/settings.json`:
+`setup.sh` does everything:
+- Copies skills to `~/.claude/skills/`
+- Copies `hooks/skill-advisor.js` to `~/.claude/scripts/hooks/`
+- Wires the `UserPromptSubmit` hook in `~/.claude/settings.json` (creates it if missing)
 
-```json
-{
-  "hooks": {
-    "UserPromptSubmit": [
-      {
-        "command": "node ~/.claude/scripts/hooks/skill-advisor.js",
-        "description": "Auto-recommend skills + trigger royal-treatment on vague prompts"
-      }
-    ]
-  }
-}
-```
+Restart Claude Code after install. Done.
 
 ## Model routing
 
