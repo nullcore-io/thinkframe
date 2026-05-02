@@ -1,0 +1,21 @@
+# Claude / AI setup files — keep local only
+CLAUDE.md
+.claude/
+settings.json
+settings.local.json
+*.claude.json
+.mcp.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs / temp
+*.log
+*.tmp
