@@ -30,10 +30,12 @@ echo "✓ Hook installed → ${HOOKS_DIR}/skill-advisor.js"
 
 # ── 3. Wire UserPromptSubmit hook in settings.json ────────────────────────────
 HOOK_CMD="node ${HOOKS_DIR}/skill-advisor.js"
-HOOK_ENTRY="{\"matcher\":\"\",\"command\":\"${HOOK_CMD}\",\"description\":\"thinkframe: skill advisor + royal treatment trigger\"}"
 
 if [ ! -f "${SETTINGS}" ]; then
-  echo "{\"hooks\":{\"UserPromptSubmit\":[${HOOK_ENTRY}]}}" > "${SETTINGS}"
+  node -e "
+    const s = {hooks:{UserPromptSubmit:[{matcher:'',hooks:[{type:'command',command:'${HOOK_CMD}'}]}]}};
+    require('fs').writeFileSync('${SETTINGS}', JSON.stringify(s, null, 2));
+  "
   echo "✓ Created ${SETTINGS} with hook"
 else
   if grep -q "skill-advisor" "${SETTINGS}" 2>/dev/null; then
@@ -44,7 +46,7 @@ else
       const s = JSON.parse(fs.readFileSync('${SETTINGS}', 'utf8'));
       s.hooks = s.hooks || {};
       s.hooks.UserPromptSubmit = s.hooks.UserPromptSubmit || [];
-      s.hooks.UserPromptSubmit.unshift(${HOOK_ENTRY});
+      s.hooks.UserPromptSubmit.unshift({matcher:'',hooks:[{type:'command',command:'${HOOK_CMD}'}]});
       fs.writeFileSync('${SETTINGS}', JSON.stringify(s, null, 2));
     " && echo "✓ Hook injected into ${SETTINGS}"
   fi
