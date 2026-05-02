@@ -88,8 +88,8 @@ It surfaces an `AskUserQuestion` before proceeding.
 
 ## Related
 
-- [tiny-edit](../tiny-edit) — token-efficient LLM edit protocol (companion project)
+- [patchframe](https://github.com/nullcore-io/patchframe) — token-efficient LLM edit protocol (companion project)
 
 ## License
 
-MIT
+- [MIT](https://github.com/nullcore-io/claude-pipeline/blob/master/LICENSE)
