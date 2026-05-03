@@ -9,13 +9,23 @@
  */
 
 const fs = require('fs');
+const path = require('path');
+
+// Normalize paths for cross-platform safety:
+// On Windows, JSON-quoted commands with backslashes break shell parsing.
+// Use forward slashes + double-quote the path argument.
+function quoteCmd(execPath) {
+  if (!execPath) return '';
+  const norm = execPath.split(path.sep).join('/');
+  return 'node "' + norm + '"';
+}
 
 const settingsPath = process.env.THINKFRAME_SETTINGS;
-const advisorCmd = 'node ' + process.env.THINKFRAME_ADVISOR;
-const verifyCmd = 'node ' + process.env.THINKFRAME_VERIFY;
-const guardCmd = 'node ' + process.env.THINKFRAME_GUARD;
+const advisorCmd = quoteCmd(process.env.THINKFRAME_ADVISOR);
+const verifyCmd = quoteCmd(process.env.THINKFRAME_VERIFY);
+const guardCmd = quoteCmd(process.env.THINKFRAME_GUARD);
 
-if (!settingsPath || !process.env.THINKFRAME_ADVISOR) {
+if (!settingsPath || !process.env.THINKFRAME_ADVISOR || !process.env.THINKFRAME_VERIFY || !process.env.THINKFRAME_GUARD) {
   console.error('Missing required env vars (THINKFRAME_SETTINGS, THINKFRAME_ADVISOR, THINKFRAME_VERIFY, THINKFRAME_GUARD).');
   process.exit(1);
 }
