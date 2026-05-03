@@ -165,22 +165,35 @@ Task 4 (depends on 1+2): code-reviewer — review implementation
 
 ## STEP 6 — VERIFICATION (MANDATORY post-execution)
 
-After STEP 5 completes, dispatch 3 agents IN PARALLEL. Goal: prove user got what they asked for.
+After STEP 5 completes, emit EXACTLY these 3 Agent() calls in a single message (parallel dispatch). Copy this block, fill in the prompts:
 
-**Reviewer** — `code-reviewer` (model: sonnet)
-- Compare delivered artifacts against REWRITTEN_PROMPT requirements
-- Flag: missing requirements, scope creep, quality issues
-- Return: PASS / FAIL + 1-line findings
+```
+Agent({
+  subagent_type: "code-reviewer",
+  model: "sonnet",
+  description: "STEP 6 Reviewer",
+  prompt: "Compare delivered artifacts against this requirement: [REWRITTEN_PROMPT]. Files changed this turn: [list]. Flag missing requirements, scope creep, code quality issues. Return: PASS|FAIL + 1-line findings. Cap 200 words."
+})
 
-**Auditor** — `security-reviewer` (model: sonnet)
-- Verify: no secrets leaked, no injection vectors, auth correct, no PII exposure
-- Skip ONLY if task has zero security surface (pure docs, pure CSS)
-- Return: PASS / FAIL + severity-classified findings
+Agent({
+  subagent_type: "security-reviewer",
+  model: "sonnet",
+  description: "STEP 6 Auditor",
+  prompt: "Audit files changed this turn: [list]. Check: no secrets leaked, no injection vectors, auth correct, no PII exposure. Skip if pure docs/CSS. Return: PASS|FAIL + severity-classified findings. Cap 200 words."
+})
 
-**Tester** — `tdd-guide` for unit, `e2e-runner` for UI (model: haiku for unit-only, sonnet for E2E)
-- Run existing tests + generate tests for changed code
-- For UI tasks: run against live dev server
-- Return: PASS / FAIL + coverage delta + failing test names
+Agent({
+  subagent_type: "tdd-guide",
+  model: "haiku",
+  description: "STEP 6 Tester",
+  prompt: "Files changed: [list]. Run existing tests, identify missing test coverage. For UI changes: dispatch e2e-runner. Return: PASS|FAIL + coverage delta + failing test names. Cap 200 words."
+})
+```
+
+**Hard rules:**
+- Do NOT inline-verify and claim PASS. Dispatch the 3 Agent() calls.
+- Stop hook (`verify-step6.js`) will block your turn from stopping if no `✅ VERIFICATION` block was emitted after Edit/Write/MultiEdit.
+- Each Agent() call MUST include `model:` parameter — `agent-model-guard.js` blocks otherwise.
 
 **Verdict block (emit after all 3 return):**
 ```
