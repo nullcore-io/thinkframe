@@ -35,45 +35,17 @@ mkdir -p "${STATE_DIR}"
 [ -f "${STATE_DIR}/fix-iter.json" ] || echo '{"iter":0}' > "${STATE_DIR}/fix-iter.json"
 echo "✓ State → ${STATE_DIR}/"
 
-# ── 4. Wire all hooks in settings.json ────────────────────────────────────────
-ADVISOR_CMD="node ${HOOKS_DIR}/skill-advisor.js"
-VERIFY_CMD="node ${HOOKS_DIR}/verify-step6.js"
-GUARD_CMD="node ${HOOKS_DIR}/agent-model-guard.js"
+# ── 4. Wire hooks in settings.json (via env vars — no shell→JS interpolation) ─
+INSTALLER="${HOOKS_DIR}/_install-hooks.js"
+curl -fsSL "${REPO}/hooks/_install-hooks.js" -o "${INSTALLER}"
 
-if [ ! -f "${SETTINGS}" ]; then
-  node -e "
-    const s = {
-      hooks: {
-        UserPromptSubmit: [{matcher:'',hooks:[{type:'command',command:'${ADVISOR_CMD}'}]}],
-        Stop: [{matcher:'',hooks:[{type:'command',command:'${VERIFY_CMD}'}]}],
-        PreToolUse: [{matcher:'Agent|Task',hooks:[{type:'command',command:'${GUARD_CMD}'}]}]
-      }
-    };
-    require('fs').writeFileSync('${SETTINGS}', JSON.stringify(s, null, 2));
-  "
-  echo "✓ Created ${SETTINGS} with all hooks"
-else
-  node -e "
-    const fs = require('fs');
-    const s = JSON.parse(fs.readFileSync('${SETTINGS}', 'utf8'));
-    s.hooks = s.hooks || {};
-    s.hooks.UserPromptSubmit = s.hooks.UserPromptSubmit || [];
-    s.hooks.Stop = s.hooks.Stop || [];
-    s.hooks.PreToolUse = s.hooks.PreToolUse || [];
+THINKFRAME_SETTINGS="${SETTINGS}" \
+THINKFRAME_ADVISOR="${HOOKS_DIR}/skill-advisor.js" \
+THINKFRAME_VERIFY="${HOOKS_DIR}/verify-step6.js" \
+THINKFRAME_GUARD="${HOOKS_DIR}/agent-model-guard.js" \
+  node "${INSTALLER}"
 
-    if (!JSON.stringify(s.hooks.UserPromptSubmit).includes('skill-advisor'))
-      s.hooks.UserPromptSubmit.unshift({matcher:'',hooks:[{type:'command',command:'${ADVISOR_CMD}'}]});
-
-    if (!JSON.stringify(s.hooks.Stop).includes('verify-step6'))
-      s.hooks.Stop.push({matcher:'',hooks:[{type:'command',command:'${VERIFY_CMD}'}]});
-
-    if (!JSON.stringify(s.hooks.PreToolUse).includes('agent-model-guard'))
-      s.hooks.PreToolUse.push({matcher:'Agent|Task',hooks:[{type:'command',command:'${GUARD_CMD}'}]});
-
-    fs.writeFileSync('${SETTINGS}', JSON.stringify(s, null, 2));
-  "
-  echo "✓ Hooks merged into ${SETTINGS}"
-fi
+rm -f "${INSTALLER}"
 
 # ── 5. Verify node ────────────────────────────────────────────────────────────
 if ! command -v node &>/dev/null; then

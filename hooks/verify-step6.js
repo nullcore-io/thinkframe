@@ -19,17 +19,27 @@ process.stdin.on('end', () => {
   try { run(raw); } catch { process.exit(0); }
 });
 
+const path = require('path');
+const os = require('os');
+
 function run(raw) {
   let input;
   try { input = JSON.parse(raw); } catch { process.exit(0); }
 
   const transcriptPath = input.transcript_path;
-  if (!transcriptPath || !fs.existsSync(transcriptPath)) process.exit(0);
+  if (!transcriptPath) process.exit(0);
+
+  // Path traversal guard — only read transcripts under ~/.claude/
+  const resolved = path.resolve(transcriptPath);
+  const claudeRoot = path.resolve(os.homedir(), '.claude');
+  if (!resolved.startsWith(claudeRoot + path.sep) && resolved !== claudeRoot) process.exit(0);
+
+  if (!fs.existsSync(resolved)) process.exit(0);
 
   // Don't loop on our own reminder — if previously blocked, allow stop now
   if (input.stop_hook_active) process.exit(0);
 
-  const lines = fs.readFileSync(transcriptPath, 'utf8').split('\n').filter(Boolean);
+  const lines = fs.readFileSync(resolved, 'utf8').split('\n').filter(Boolean);
 
   // Find the boundary of THIS user turn (last user message)
   let lastUserIdx = -1;
