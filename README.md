@@ -86,6 +86,33 @@ Opus never silently picks between approaches. If the prompt is ambiguous across 
 
 It surfaces an `AskUserQuestion` before proceeding.
 
+## Troubleshooting
+
+### Agent stops mid-task with "Failed with non-blocking status code"
+
+**Symptom:** Mid-orchestration the agent emits something like:
+
+```
+PostToolUse:Edit hook error
+  Failed with non-blocking status code: No stderr output
+```
+
+…then idles until you ask "why did you stop?".
+
+**Cause:** Some other PostToolUse / PreToolUse hook in your `~/.claude/settings.json` exited non-zero with empty stderr — typically a third-party hook that shells out to `node -e`, `bash`, `tsc`, `eslint`, or similar binaries on Windows. Claude Code labels the failure "non-blocking" but injects the error text into the model's context, and the model derails.
+
+**Mitigation already shipped:** The `royal-treatment` skill contains a HOOK NOISE section that tells the model to ignore these messages and continue. After installing thinkframe + restarting Claude Code, royal-treatment runs will keep going.
+
+**To find the offending hook yourself:**
+
+```bash
+grep -B1 -A2 'PostToolUse\|PreToolUse' ~/.claude/settings.json
+```
+
+Look for entries that shell out to `node -e`, raw shell scripts, or external binaries with Windows-style paths. Common culprits: `gsd-phase-boundary.sh`, anything piping `$FILE` through `node -e` inline.
+
+**Permanent fix at the noisy hook:** add `2>/dev/null` to its command and ensure it always exits 0 unless it actually means to block.
+
 ## Related
 
 - [patchframe](https://github.com/nullcore-io/patchframe) — token-efficient LLM edit protocol (companion project)

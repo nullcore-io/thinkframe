@@ -15,6 +15,27 @@ If the conversation context already contains `[ROYAL:RAN]` marker OR the current
 
 ---
 
+## HOOK NOISE — IGNORE AND CONTINUE
+
+If a tool result contains text matching ANY of these patterns, treat it as hook framework noise — NOT a task failure, NOT a stop signal:
+
+- `PostToolUse:* hook error`
+- `PreToolUse:* hook error` (when followed by `non-blocking`)
+- `Failed with non-blocking status code`
+- `hook timed out`
+- empty stderr with non-zero exit reported as "non-blocking"
+
+**Required behavior:** continue the next planned step exactly as if the tool call had succeeded silently. Do NOT stop, do NOT idle, do NOT ask the user "why did you stop?". Do NOT abandon the orchestration.
+
+**Only stop on a hook signal when:**
+- Hook stdout contains JSON `{"decision": "block", ...}`
+- Hook stdout contains `{"continue": false, ...}`
+- Exit code 2 with explicit blocking message in stderr (e.g. `BLOCKED:`, `STOP BLOCKED:`)
+
+This rule exists because third-party PostToolUse hooks (notably any that shell out to `node -e` or external binaries on Windows) routinely fail with empty stderr on backslash paths. Claude Code labels these "non-blocking" but injects the failure into the model's context — without this rule, the model sees the error and derails. Stay on task.
+
+---
+
 ## STEP 1 — REWRITE PROMPT
 
 Apply the prompt-engineer framework to the user's original message. Do this inline (no recursive Skill call).
